@@ -1,22 +1,36 @@
-#include <GL/glut.h> // Include the GLUT header file
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include <cmath>
+
+// Window dimensions
+const GLint WIDTH = 800, HEIGHT = 600;
 
 // Circle parameters
-float circleX = -0.8f;
-float circleY = -0.7f;
-float circleRadius = 0.05f;
+GLfloat circleX = -0.8f;
+GLfloat circleY = -0.7f;
+GLfloat circleRadius = 0.05f;
 
 // Road parameters
-float roadWidth = 1.6f;
-float roadHeight = 0.4f;
+GLfloat roadWidth = 1.6f;
+GLfloat roadHeight = 0.4f;
 
 // Animation parameters
-float animationSpeed = 0.005f;
+GLfloat animationSpeed = 0.005f;
 
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer
-    glLoadIdentity(); // Load the identity matrix to reset transformations
+void drawCircle(GLfloat x, GLfloat y, GLfloat radius) {
+    int numSegments = 100;
+    glBegin(GL_TRIANGLE_FAN);
+    for (int i = 0; i < numSegments; i++) {
+        GLfloat theta = 2.0f * M_PI * GLfloat(i) / GLfloat(numSegments);
+        GLfloat cx = radius * cosf(theta);
+        GLfloat cy = radius * sinf(theta);
+        glVertex2f(x + cx, y + cy);
+    }
+    glEnd();
+}
 
-    // Draw road
+void drawRoad() {
     glColor3f(0.2f, 0.2f, 0.2f); // Grey color for road
     glBegin(GL_POLYGON);
     glVertex2f(-1.0f, -0.5f);
@@ -24,42 +38,85 @@ void display() {
     glVertex2f(1.0f, -1.0f);
     glVertex2f(1.0f, -0.5f);
     glEnd();
-
-    // Draw circle (car)
-    glColor3f(1.0f, 0.0f, 0.0f); // Red color for circle (car)
-    glBegin(GL_POLYGON);
-    for (float theta = 0; theta < 2 * 3.1415; theta += 0.01) {
-        glVertex2f(circleX + circleRadius * cos(theta), circleY + circleRadius * sin(theta));
-    }
-    glEnd();
-
-    glutSwapBuffers(); // Swap the front and back buffers to display the rendered image
 }
 
-void update(int value) {
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+}
+
+void update() {
     // Move the circle along the road
     circleX += animationSpeed;
     if (circleX > (1.0f + circleRadius)) {
         circleX = -1.0f - circleRadius;
     }
-
-    glutPostRedisplay(); // Mark the current window to be redisplayed
-    glutTimerFunc(16, update, 0); // Call the update function after 16 milliseconds (about 60 frames per second)
 }
 
-int main(int argc, char** argv) {
-    glutInit(&argc, argv); // Initialize GLUT
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); // Set up the display mode (double buffer and RGB color)
-    glutInitWindowSize(800, 600); // Set the window size
-    glutInitWindowPosition(100, 100); // Set the window position
-    glutCreateWindow("OpenGL Road with Moving Circle"); // Create the window with the given title
+void renderScene() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    glLoadIdentity();
 
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Set the clear color (white)
+    drawRoad();
+    
+    glColor3f(1.0f, 0.0f, 0.0f); // Red color for circle (car)
+    drawCircle(circleX, circleY, circleRadius);
 
-    glutDisplayFunc(display); // Register display callback function
-    glutTimerFunc(0, update, 0); // Call the update function to start the animation
+    glfwSwapBuffers();
+}
 
-    glutMainLoop(); // Enter the GLUT event processing loop
+int main() {
+    // Initialize GLFW
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
+
+    // Create a GLFW window
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Road with Moving Circle", nullptr, nullptr);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+    // Set up GLEW
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed to initialize GLEW" << std::endl;
+        return -1;
+    }
+
+    // Set the OpenGL viewport size
+    glViewport(0, 0, WIDTH, HEIGHT);
+
+    // Set GLFW callback functions
+    glfwSetKeyCallback(window, keyCallback);
+
+    // Set OpenGL options
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Main loop
+    while (!glfwWindowShouldClose(window)) {
+        // Update
+        update();
+
+        // Render
+        renderScene();
+
+        // Poll for and process events
+        glfwPollEvents();
+    }
+
+    // Clean up GLFW
+    glfwTerminate();
 
     return 0;
 }
