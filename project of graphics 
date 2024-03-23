@@ -2,7 +2,6 @@
 #include <iostream>
 #include <cmath>
 
-// Window dimensions
 const int WIDTH = 800;
 const int HEIGHT = 600;
 
@@ -13,10 +12,10 @@ GLfloat cycleZ = -3.0f;
 GLfloat cycleSpeed = 0.005f;
 
 void drawCycle() {
+    // Draw cycle body
     glColor3f(0.0f, 0.0f, 0.0f); // Black color for cycle
     glPushMatrix();
     glTranslatef(cycleX, cycleY, cycleZ);
-    // Draw cycle body
     glBegin(GL_QUADS);
     glVertex3f(0.0f, 0.0f, 0.0f);
     glVertex3f(0.1f, 0.0f, 0.0f);
@@ -44,22 +43,13 @@ void drawCycle() {
 }
 
 void drawRoad() {
+    // Draw road
     glColor3f(0.2f, 0.2f, 0.2f); // Grey color for road
     glBegin(GL_QUADS);
     glVertex3f(-1.0f, -0.5f, -10.0f);
     glVertex3f(-1.0f, -0.5f, 0.0f);
     glVertex3f(1.0f, -0.5f, 0.0f);
     glVertex3f(1.0f, -0.5f, -10.0f);
-    glEnd();
-}
-
-void drawRiver() {
-    glColor3f(0.0f, 0.5f, 1.0f); // Blue color for river
-    glBegin(GL_QUADS);
-    glVertex3f(-1.0f, -1.0f, -10.0f);
-    glVertex3f(-1.0f, -0.5f, -10.0f);
-    glVertex3f(1.0f, -0.5f, -10.0f);
-    glVertex3f(1.0f, -1.0f, -10.0f);
     glEnd();
 }
 
@@ -75,10 +65,9 @@ void renderScene() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
-    glTranslatef(0.0f, 0.0f, -3.0f); // Translate the scene along the z-axis
+    glTranslatef(0.0f, 0.0f, -5.0f); // Translate the scene along the z-axis
 
     drawRoad();
-    drawRiver();
     drawCycle();
 
     glfwSwapBuffers();
@@ -92,7 +81,7 @@ int main() {
     }
 
     // Create a GLFW window
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "3D Scene", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Cycle Run in 3D Road", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
