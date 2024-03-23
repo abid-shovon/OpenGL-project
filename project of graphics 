@@ -1,37 +1,50 @@
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <GL/glut.h>
 #include <iostream>
 #include <cmath>
 
 // Window dimensions
-const GLint WIDTH = 800, HEIGHT = 600;
-
-// Circle parameters
-GLfloat circleX = -0.8f;
-GLfloat circleY = -0.7f;
-GLfloat circleRadius = 0.05f;
-
-// Road parameters
-GLfloat roadWidth = 1.6f;
-GLfloat roadHeight = 0.4f;
+const int WIDTH = 800;
+const int HEIGHT = 600;
 
 // Animation parameters
-GLfloat animationSpeed = 0.005f;
+float cyclePosition = -0.8f;
+float cycleSpeed = 0.005f;
 
-void drawCircle(GLfloat x, GLfloat y, GLfloat radius) {
-    int numSegments = 100;
+void drawCycle() {
+    // Draw cycle body
+    glColor3f(0.0f, 0.0f, 0.0f);
+    glBegin(GL_POLYGON);
+    glVertex2f(cyclePosition, -0.6f);
+    glVertex2f(cyclePosition + 0.1f, -0.6f);
+    glVertex2f(cyclePosition + 0.1f, -0.4f);
+    glVertex2f(cyclePosition, -0.4f);
+    glEnd();
+
+    // Draw cycle wheels
+    glColor3f(0.0f, 0.0f, 0.0f);
     glBegin(GL_TRIANGLE_FAN);
-    for (int i = 0; i < numSegments; i++) {
-        GLfloat theta = 2.0f * M_PI * GLfloat(i) / GLfloat(numSegments);
-        GLfloat cx = radius * cosf(theta);
-        GLfloat cy = radius * sinf(theta);
-        glVertex2f(x + cx, y + cy);
+    float wheelCenterX1 = cyclePosition + 0.025f;
+    float wheelCenterX2 = cyclePosition + 0.075f;
+    float wheelCenterY = -0.6f;
+    glVertex2f(wheelCenterX1, wheelCenterY);
+    for (int i = 0; i <= 360; i += 5) {
+        float angle = i * M_PI / 180;
+        glVertex2f(wheelCenterX1 + 0.05f * cos(angle), wheelCenterY + 0.05f * sin(angle));
+    }
+    glEnd();
+
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(wheelCenterX2, wheelCenterY);
+    for (int i = 0; i <= 360; i += 5) {
+        float angle = i * M_PI / 180;
+        glVertex2f(wheelCenterX2 + 0.05f * cos(angle), wheelCenterY + 0.05f * sin(angle));
     }
     glEnd();
 }
 
 void drawRoad() {
-    glColor3f(0.2f, 0.2f, 0.2f); // Grey color for road
+    // Draw road
+    glColor3f(0.2f, 0.2f, 0.2f);
     glBegin(GL_POLYGON);
     glVertex2f(-1.0f, -0.5f);
     glVertex2f(-1.0f, -1.0f);
@@ -40,83 +53,53 @@ void drawRoad() {
     glEnd();
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
+void drawRiver() {
+    // Draw river
+    glColor3f(0.0f, 0.5f, 1.0f);
+    glBegin(GL_POLYGON);
+    glVertex2f(-1.0f, -0.5f);
+    glVertex2f(-1.0f, 0.0f);
+    glVertex2f(1.0f, 0.0f);
+    glVertex2f(1.0f, -0.5f);
+    glEnd();
 }
 
-void update() {
-    // Move the circle along the road
-    circleX += animationSpeed;
-    if (circleX > (1.0f + circleRadius)) {
-        circleX = -1.0f - circleRadius;
-    }
-}
-
-void renderScene() {
+void display() {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
 
     drawRoad();
-    
-    glColor3f(1.0f, 0.0f, 0.0f); // Red color for circle (car)
-    drawCircle(circleX, circleY, circleRadius);
+    drawRiver();
+    drawCycle();
 
-    glfwSwapBuffers();
+    glutSwapBuffers();
 }
 
-int main() {
-    // Initialize GLFW
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return -1;
+void update(int value) {
+    // Move the cycle along the road
+    cyclePosition += cycleSpeed;
+    if (cyclePosition > 1.0f) {
+        cyclePosition = -1.5f;
     }
 
-    // Create a GLFW window
-    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "OpenGL Road with Moving Circle", nullptr, nullptr);
-    if (!window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
+    glutPostRedisplay();
+    glutTimerFunc(16, update, 0);
+}
 
-    // Set up GLEW
-    if (glewInit() != GLEW_OK) {
-        std::cerr << "Failed to initialize GLEW" << std::endl;
-        return -1;
-    }
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    glutInitWindowSize(WIDTH, HEIGHT);
+    glutCreateWindow("Cycle Ride Beside the River");
 
-    // Set the OpenGL viewport size
-    glViewport(0, 0, WIDTH, HEIGHT);
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Set GLFW callback functions
-    glfwSetKeyCallback(window, keyCallback);
+    gluOrtho2D(-1.0f, 1.0f, -1.0f, 1.0f);
 
-    // Set OpenGL options
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glutDisplayFunc(display);
+    glutTimerFunc(0, update, 0);
 
-    // Main loop
-    while (!glfwWindowShouldClose(window)) {
-        // Update
-        update();
-
-        // Render
-        renderScene();
-
-        // Poll for and process events
-        glfwPollEvents();
-    }
-
-    // Clean up GLFW
-    glfwTerminate();
+    glutMainLoop();
 
     return 0;
 }
