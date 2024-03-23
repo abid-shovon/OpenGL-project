@@ -1,0 +1,65 @@
+#include <GL/glut.h> // Include the GLUT header file
+
+// Circle parameters
+float circleX = -0.8f;
+float circleY = -0.7f;
+float circleRadius = 0.05f;
+
+// Road parameters
+float roadWidth = 1.6f;
+float roadHeight = 0.4f;
+
+// Animation parameters
+float animationSpeed = 0.005f;
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT); // Clear the color buffer
+    glLoadIdentity(); // Load the identity matrix to reset transformations
+
+    // Draw road
+    glColor3f(0.2f, 0.2f, 0.2f); // Grey color for road
+    glBegin(GL_POLYGON);
+    glVertex2f(-1.0f, -0.5f);
+    glVertex2f(-1.0f, -1.0f);
+    glVertex2f(1.0f, -1.0f);
+    glVertex2f(1.0f, -0.5f);
+    glEnd();
+
+    // Draw circle (car)
+    glColor3f(1.0f, 0.0f, 0.0f); // Red color for circle (car)
+    glBegin(GL_POLYGON);
+    for (float theta = 0; theta < 2 * 3.1415; theta += 0.01) {
+        glVertex2f(circleX + circleRadius * cos(theta), circleY + circleRadius * sin(theta));
+    }
+    glEnd();
+
+    glutSwapBuffers(); // Swap the front and back buffers to display the rendered image
+}
+
+void update(int value) {
+    // Move the circle along the road
+    circleX += animationSpeed;
+    if (circleX > (1.0f + circleRadius)) {
+        circleX = -1.0f - circleRadius;
+    }
+
+    glutPostRedisplay(); // Mark the current window to be redisplayed
+    glutTimerFunc(16, update, 0); // Call the update function after 16 milliseconds (about 60 frames per second)
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv); // Initialize GLUT
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); // Set up the display mode (double buffer and RGB color)
+    glutInitWindowSize(800, 600); // Set the window size
+    glutInitWindowPosition(100, 100); // Set the window position
+    glutCreateWindow("OpenGL Road with Moving Circle"); // Create the window with the given title
+
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f); // Set the clear color (white)
+
+    glutDisplayFunc(display); // Register display callback function
+    glutTimerFunc(0, update, 0); // Call the update function to start the animation
+
+    glutMainLoop(); // Enter the GLUT event processing loop
+
+    return 0;
+}
